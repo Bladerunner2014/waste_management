@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-model_config = {"form_name": "vehicle", "form_id": None, "action": "add, update, delete, get", "payload": dict}
+model_config = {"form_name": "vehicle", "form_id": "None", "action": "add, update, delete, get", "payload": "None"}
 
 
 class Request(BaseModel):

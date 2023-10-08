@@ -3,7 +3,7 @@ from manager.handler import RequestManager
 from fastapi import FastAPI, Body
 import logging
 from constants.info_message import InfoMessage
-from models.models import Token, User, model_config
+from models.models import Token, User, model_config, Request
 from log import log
 from security.details import *
 from fastapi.security import OAuth2PasswordRequestForm
@@ -20,7 +20,7 @@ tags_metadata = [
         "description": "This endpoint handle the authentication of users.",
 
     },
-{
+    {
         "name": "form_upload",
         "description": "With this endpoints you can upload or get a form structure in mongoDB.",
 
@@ -56,7 +56,7 @@ def get_form_structure(form_name, current_user: Annotated[User, Depends(get_curr
 
 @app.post("/post_form/", tags=["form_crud"], response_model=dict)
 def post(current_user: Annotated[User, Depends(get_current_active_user)] = None,
-         doc: Annotated[dict | None, Body(examples=[model_config], description="Document")] = None):
+         doc: Annotated[Request | None, Body(examples=[model_config], description="Document")] = None):
     logger.info(InfoMessage.POST_REQUEST.format(username=current_user.username, document=doc))
     mg = RequestManager()
     res = mg.check_action(dict(doc))
