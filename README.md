@@ -18,7 +18,16 @@ A UI powered by **FastAPI**. You can manage MongoDB database via CRUD endpoints.
 ## Run with docker:
 Run the following command in the project root:
 ```bash
-docker compose up
+# clone the project
+git clone [https://git@git.siz-tel.com:2222/bladerunner/MongoDB_WebUI_UPDATED.git](https://github.com/Bladerunner2014/waste_management.git)
+
+# or usin ssh
+git clone git@github.com:Bladerunner2014/waste_management.git
+
+cd MongoDB_WebUI_UPDATED
+
+# run project with docker and docker-compose
+docker-compose up -d
 ```
 This command will build container image and run it on 8008 port. you can change the listening port in docker-compose file by changing the 8008 in ports section:
 ```bash
