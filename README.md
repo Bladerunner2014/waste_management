@@ -19,7 +19,7 @@ A UI powered by **FastAPI**. You can manage MongoDB database via CRUD endpoints.
 Run the following command in the project root:
 ```bash
 # clone the project
-git clone [https://git@git.siz-tel.com:2222/bladerunner/MongoDB_WebUI_UPDATED.git](https://github.com/Bladerunner2014/waste_management.git)
+git clone https://github.com/Bladerunner2014/waste_management.git
 
 # or usin ssh
 git clone git@github.com:Bladerunner2014/waste_management.git
