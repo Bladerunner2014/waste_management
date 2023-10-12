@@ -150,21 +150,29 @@ class FormManager:
     def __init__(self):
         self.config = dotenv_values(".env")
         self.logger = logging.getLogger(__name__)
-        self.dao = WasteManagementDao(self.config['FORMS_COLLECTION_NAME'], self.config["DB_NAME"])
+        self.dao = WasteManagementDao(self.config['FORM_STRUCTURE_DB_COLLECTION_NAME'], self.config["DB_NAME"])
 
     def csv_processor(self):
-        res = ResponseHandler()
+        result = ResponseHandler()
         file_path = 'new_form.csv'
         data = pd.read_csv(file_path)
         dict_data = data.to_dict('records')
-        res = self.dao.insert_one(dict_data[0])
+        pattern = dict_data[0]
+        # pattern.update(form_info)
+
         # duplicate_imsi = []
         # for row in dict_data:
         #     print(row)
         #     res = self.dao.insert_one(row)
         #     if res.status_code == status.HTTP_400_BAD_REQUEST:
         #         duplicate_imsi.append(row["imsi"])
+        try:
+            res = self.dao.insert_one(pattern)
+        except Exception as error:
+            self.logger.error(ErrorMessage.DB_INSERT)
+            self.logger.error(error)
+            raise Exception
 
-        res.set_response({"message": InfoMessage.DB_INSERT})
-        res.set_status_code(status.HTTP_201_CREATED)
-        return res
+        result.set_response({"message": InfoMessage.DB_INSERT})
+        result.set_status_code(status.HTTP_201_CREATED)
+        return result
