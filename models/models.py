@@ -13,7 +13,6 @@ class Request(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
-    apn: str
 
 
 class TokenData(BaseModel):
@@ -26,6 +25,17 @@ class User(BaseModel):
     full_name: str | None = None
     disabled: bool | None = None
     hashed_password: str
+
+
+class UserSignIn(BaseModel):
+    username: str
+    company: str
+    full_name: str | None = None
+    disabled: bool | None = None
+    password: str
+
+
+user_sign_in = {"username": "mohammad", "password": "qwerty67", "email": "mohammad@gmail.com"}
 
 
 class UserInDB(User):

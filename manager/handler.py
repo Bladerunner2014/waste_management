@@ -109,3 +109,32 @@ class RequestManager:
         else:
             res = None
         return res
+
+
+class SignUp:
+    def __init__(self):
+        self.config = dotenv_values(".env")
+        self.logger = logging.getLogger(__name__)
+        self.dao = WasteManagementDao(self.config['DB_COLLECTION_NAME'], self.config["DB_NAME"])
+        self.duplicate = RequestManager()
+
+    def sign_in(self, user_info):
+        email = {"email": user_info['email']}
+        res = self.duplicate.find(email)
+        if res.generate_response().status_code == status.HTTP_200_OK:
+            res.set_response({"message": ErrorMessage.ALREADY_EXISTS})
+            res.set_status_code(status.HTTP_400_BAD_REQUEST)
+            return res
+
+        try:
+            self.dao.insert_one(user_info)
+            self.logger.info(InfoMessage.DB_INSERT)
+        except Exception as error:
+            self.logger.error(ErrorMessage.DB_INSERT)
+            self.logger.error(error)
+            raise Exception
+
+        res.set_response({"message": InfoMessage.DB_INSERT})
+        res.set_status_code(status.HTTP_201_CREATED)
+
+        return res

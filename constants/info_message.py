@@ -12,5 +12,6 @@ class InfoMessage:
     POST_REQUEST = "user {username} sent a post request: {document}"
     DB_UPDATED = "database updated successfully"
     PUT_REQUEST = "user {username} sent a put request: {document}"
-    DELETE_REQUEST= "user {username} sent a delete request: {document}"
+    DELETE_REQUEST = "user {username} sent a delete request: {document}"
     DB_DELETE = "document delete successfully"
+    USER_CREATED = "user created successfully"

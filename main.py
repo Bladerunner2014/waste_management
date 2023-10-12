@@ -1,14 +1,15 @@
 from typing import Annotated
-from manager.handler import RequestManager
+from manager.handler import RequestManager,SignUp
 from fastapi import FastAPI, Body
 import logging
 from constants.info_message import InfoMessage
-from models.models import Token, User, model_config, Request
+from models.models import Token, User, model_config, Request, UserSignIn, user_sign_in
 from log import log
 from security.details import *
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from fastapi.middleware.cors import CORSMiddleware
+from security.details import get_user
 
 tags_metadata = [
     {
@@ -88,7 +89,16 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
 
-    return {"access_token": access_token, "token_type": "bearer", "apn": user.company}
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/sign_up", tags=["auth"])
+async def sign_up(
+        user_info: Annotated[UserSignIn | None, Body(examples=user_sign_in, description="Sign up")] = None):
+    mg = SignUp()
+    res = mg.sign_in(user_info)
+
+    return res.generate_response()
 
 
 log.setup_logger()
