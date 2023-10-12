@@ -24,7 +24,7 @@ git clone https://github.com/Bladerunner2014/waste_management.git
 # or usin ssh
 git clone git@github.com:Bladerunner2014/waste_management.git
 
-cd MongoDB_WebUI_UPDATED
+cd waste_management
 
 # run project with docker and docker-compose
 docker-compose up -d
