@@ -6,13 +6,14 @@ from constants.info_message import InfoMessage
 from http_handler.response_handler import ResponseHandler
 from fastapi import status
 from security.details import get_password_hash
+import pandas as pd
 
 
 class RequestManager:
     def __init__(self):
         self.config = dotenv_values(".env")
         self.logger = logging.getLogger(__name__)
-        self.dao = WasteManagementDao(self.config['DB_COLLECTION_NAME'], self.config["DB_NAME"])
+        self.dao = WasteManagementDao(self.config['FORMS_COLLECTION_NAME'], self.config["DB_NAME"])
 
     def find(self, condition: dict):
         res = ResponseHandler()
@@ -116,17 +117,21 @@ class SignUp:
     def __init__(self):
         self.config = dotenv_values(".env")
         self.logger = logging.getLogger(__name__)
-        self.dao = WasteManagementDao(self.config['DB_COLLECTION_NAME'], self.config["DB_NAME"])
-        self.duplicate = RequestManager()
+        self.dao = WasteManagementDao(collection_name="users", database="Waste")
 
-    def sign_in(self, user_info):
+    def sign_up(self, user_info):
+        result = ResponseHandler()
         email = {"email": user_info['email']}
-        res = self.duplicate.find(email)
-        if res.generate_response().status_code == status.HTTP_200_OK:
-            res.set_response({"message": ErrorMessage.ALREADY_EXISTS})
-            res.set_status_code(status.HTTP_400_BAD_REQUEST)
-            return res
-        user_info["password"] = get_password_hash(user_info["password"])
+        username = {"username": user_info['username']}
+        email_res = self.dao.find(email)
+        username_res = self.dao.find(username)
+        if email_res or username_res:
+            result.set_response({"message": ErrorMessage.ALREADY_EXISTS})
+            result.set_status_code(status.HTTP_400_BAD_REQUEST)
+            return result
+
+        user_info["hashed_password"] = get_password_hash(user_info["password"])
+        user_info.pop("password")
         try:
             self.dao.insert_one(user_info)
             self.logger.info(InfoMessage.DB_INSERT)
@@ -135,7 +140,31 @@ class SignUp:
             self.logger.error(error)
             raise Exception
 
+        result.set_response({"message": InfoMessage.DB_INSERT})
+        result.set_status_code(status.HTTP_201_CREATED)
+
+        return result
+
+
+class FormManager:
+    def __init__(self):
+        self.config = dotenv_values(".env")
+        self.logger = logging.getLogger(__name__)
+        self.dao = WasteManagementDao(self.config['FORMS_COLLECTION_NAME'], self.config["DB_NAME"])
+
+    def csv_processor(self):
+        res = ResponseHandler()
+        file_path = 'new_form.csv'
+        data = pd.read_csv(file_path)
+        dict_data = data.to_dict('records')
+        res = self.dao.insert_one(dict_data[0])
+        # duplicate_imsi = []
+        # for row in dict_data:
+        #     print(row)
+        #     res = self.dao.insert_one(row)
+        #     if res.status_code == status.HTTP_400_BAD_REQUEST:
+        #         duplicate_imsi.append(row["imsi"])
+
         res.set_response({"message": InfoMessage.DB_INSERT})
         res.set_status_code(status.HTTP_201_CREATED)
-
         return res

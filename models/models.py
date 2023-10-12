@@ -19,24 +19,19 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-class User(BaseModel):
+class UserSignIn(BaseModel):
     username: str
-    company: str
+    company: str | None = None
     full_name: str | None = None
     disabled: bool | None = None
     hashed_password: str
+    email: str | None = None
 
 
-class UserSignIn(BaseModel):
-    username: str
-    company: str
-    full_name: str | None = None
-    disabled: bool | None = None
-    password: str
+user_sign_in = {"username": "mohammad", "company": "pars", "full_name": "heidary", "disabled": False,
+                "password": "qwerty67",
+                "email": "mohammad@gmail.com"}
 
 
-user_sign_in = {"username": "mohammad", "password": "qwerty67", "email": "mohammad@gmail.com"}
-
-
-class UserInDB(User):
+class UserInDB(UserSignIn):
     hashed_password: str

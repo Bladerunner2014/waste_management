@@ -1,7 +1,7 @@
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from models.models import UserInDB, TokenData, User
+from models.models import UserInDB, TokenData, UserSignIn
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
 from typing import Annotated
@@ -51,7 +51,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
 def get_user(username: str):
     client = MongoClient(config['DB_HOST'], int(config['DB_PORT']))
 
-    database = client[config["USER_DB_NAME"]]
+    database = client[config["DB_NAME"]]
     collection = database[config["USER_COLLECTION_NAME"]]
     cursor = collection.find_one({'username': username})
     if not cursor:
@@ -60,7 +60,7 @@ def get_user(username: str):
 
 
 def get_current_active_user(
-        current_user: Annotated[User, Depends(get_current_user)]
+        current_user: Annotated[UserSignIn, Depends(get_current_user)]
 ):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")

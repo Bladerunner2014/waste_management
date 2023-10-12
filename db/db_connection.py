@@ -22,7 +22,7 @@ class DBconnect:
 
         try:
             database = client[self.database]
-            collection = database[self.config['DB_COLLECTION_NAME']]
+            collection = database[self.collection]
         except Exception as error:
             self.logger.error(ErrorMessage.DB_CONNECTION)
             self.logger.error(error)

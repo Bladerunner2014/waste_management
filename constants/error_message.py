@@ -13,9 +13,6 @@ class ErrorMessage:
     DB_PUT_CONNECTION_TO_POOL = "db put connection to pool error"
     DB_SELECT = "db select error"
     DB_DELETE = "document delete failed"
-    REDIS_CONNECTION = "redis connection error"
-    REDIS_SISMEMBER = "redis membership error"
-    REDIS_SET = "redis SET error"
-    REDIS_GET = "redis GET error"
 
-    INVESTOR_REPO_ERROR_LOGS = "investor repo error log"
+    FILE = "File too large"
+    ROLE = "User role is not consistent with the request"

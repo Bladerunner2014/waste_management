@@ -1,9 +1,10 @@
 from typing import Annotated
-from manager.handler import RequestManager,SignUp
-from fastapi import FastAPI, Body
+from manager.handler import RequestManager,SignUp, FormManager
+from fastapi import FastAPI, Body, UploadFile
 import logging
 from constants.info_message import InfoMessage
-from models.models import Token, User, model_config, Request, UserSignIn, user_sign_in
+from constants.error_message import ErrorMessage
+from models.models import Token, UserSignIn, model_config, Request, UserSignIn, user_sign_in
 from log import log
 from security.details import *
 from fastapi.security import OAuth2PasswordRequestForm
@@ -44,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.get("/get_struct/{name}", tags=["form_upload"])
-def get_form_structure(form_name, current_user: Annotated[User, Depends(get_current_active_user)] = None,
+def get_form_structure(form_name, current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
                        ):
     condition = {'name': form_name}
 
@@ -56,7 +57,7 @@ def get_form_structure(form_name, current_user: Annotated[User, Depends(get_curr
 
 
 @app.post("/post_form/", tags=["form_crud"], response_model=dict)
-def post(current_user: Annotated[User, Depends(get_current_active_user)] = None,
+def post(current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
          doc: Annotated[Request | None, Body(examples=[model_config], description="Document")] = None):
     logger.info(InfoMessage.POST_REQUEST.format(username=current_user.username, document=doc))
     mg = RequestManager()
@@ -64,12 +65,32 @@ def post(current_user: Annotated[User, Depends(get_current_active_user)] = None,
     return res.generate_response()
 
 
-@app.post("/form_upload/", tags=["form_upload"], response_model=dict)
-def post(current_user: Annotated[User, Depends(get_current_active_user)] = None,
-         upload_form: Annotated[dict | None, Body(description="upload form")] = None):
-    logger.info(InfoMessage.POST_REQUEST.format(username=current_user.username, document=upload_form))
-    mg = RequestManager()
-    res = mg.insert(dict(upload_form))
+@app.post("/form_upload", tags=["form_upload"])
+async def create_upload_file(file: UploadFile, current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+                             ):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
+
+    # Get the file size (in bytes)
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+
+    # move the cursor back to the beginning
+    await file.seek(0)
+    if file_size > 2 * 1024 * 1024:
+        # more than 2 MB
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large")
+
+    # check the content type (MIME type)
+    content_type = file.content_type
+    if content_type not in ["text/csv"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file type")
+    w_file = file.file.read()
+    with open("new_form.csv", "wb") as writer:
+        writer.write(w_file)
+
+    mg = FormManager()
+    res = mg.csv_processor()
     return res.generate_response()
 
 
@@ -94,9 +115,11 @@ async def login_for_access_token(
 
 @app.post("/sign_up", tags=["auth"])
 async def sign_up(
-        user_info: Annotated[UserSignIn | None, Body(examples=user_sign_in, description="Sign up")] = None):
+        user_info: Annotated[UserSignIn | None, Body(examples=[user_sign_in], description="Sign up")] = None):
+    logger.info(user_info)
+
     mg = SignUp()
-    res = mg.sign_in(user_info)
+    res = mg.sign_up(dict(user_info))
 
     return res.generate_response()
 
