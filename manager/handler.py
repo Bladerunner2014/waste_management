@@ -5,6 +5,7 @@ from constants.error_message import ErrorMessage
 from constants.info_message import InfoMessage
 from http_handler.response_handler import ResponseHandler
 from fastapi import status
+from security.details import get_password_hash
 
 
 class RequestManager:
@@ -125,7 +126,7 @@ class SignUp:
             res.set_response({"message": ErrorMessage.ALREADY_EXISTS})
             res.set_status_code(status.HTTP_400_BAD_REQUEST)
             return res
-
+        user_info["password"] = get_password_hash(user_info["password"])
         try:
             self.dao.insert_one(user_info)
             self.logger.info(InfoMessage.DB_INSERT)

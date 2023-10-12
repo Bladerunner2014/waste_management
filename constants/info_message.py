@@ -15,3 +15,4 @@ class InfoMessage:
     DELETE_REQUEST = "user {username} sent a delete request: {document}"
     DB_DELETE = "document delete successfully"
     USER_CREATED = "user created successfully"
+    EMAIL = "email sent"
