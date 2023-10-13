@@ -7,7 +7,7 @@ class InfoMessage:
     DB_FIND = "document found successfully"
     DB_QUERY = "db query"
     NOT_FOUND = "did not found found any document"
-    GET_REQUEST = "user {username} sent a get request: {imsi}"
+    GET_REQUEST = "user {username} sent a get request: {form_name}"
     DB_INSERT = "document inserted successfully"
     POST_REQUEST = "user {username} sent a post request: {document}"
     DB_UPDATED = "database updated successfully"
@@ -16,3 +16,4 @@ class InfoMessage:
     DB_DELETE = "document delete successfully"
     USER_CREATED = "user created successfully"
     EMAIL = "email sent"
+    UPDATE_FORM = "form structure already exists in database, updating form structure."

@@ -1,10 +1,10 @@
 from typing import Annotated
-from manager.handler import RequestManager,SignUp, FormManager
-from fastapi import FastAPI, Body, UploadFile
+from manager.handler import RequestManager, SignUp, FormManager
+from fastapi import FastAPI, Body, UploadFile, File
 import logging
 from constants.info_message import InfoMessage
 from constants.error_message import ErrorMessage
-from models.models import Token, UserSignIn, model_config, Request, UserSignIn, user_sign_in
+from models.models import Token, UserSignIn, model_config, UserSignIn, user_sign_in
 from log import log
 from security.details import *
 from fastapi.security import OAuth2PasswordRequestForm
@@ -23,8 +23,8 @@ tags_metadata = [
 
     },
     {
-        "name": "form_upload",
-        "description": "With this endpoints you can upload or get a form structure in mongoDB.",
+        "name": "form_struct_crud",
+        "description": "To CRUD forms structs in database (only admin can access these endpoints).",
 
     }
 ]
@@ -44,29 +44,33 @@ config = dotenv_values(".env")
 logger = logging.getLogger(__name__)
 
 
-@app.get("/get_struct/{name}", tags=["form_upload"])
-def get_form_structure(form_name, current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+@app.get("/get_struct/{form_id}", tags=["form_struct_crud"])
+def get_form_structure(form_id, current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
                        ):
-    condition = {'name': form_name}
+    condition = {'form_id': form_id}
 
-    logger.info(InfoMessage.GET_REQUEST.format(username=current_user.username, form_name=form_name))
+    logger.info(InfoMessage.GET_REQUEST.format(username=current_user.username, form_name=form_id))
 
-    mg = RequestManager()
+    mg = RequestManager(config['FORM_STRUCTURE_DB_COLLECTION_NAME'])
     res = mg.find(condition)
     return res.generate_response()
 
 
-@app.post("/post_form/", tags=["form_crud"], response_model=dict)
-def post(current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
-         doc: Annotated[Request | None, Body(examples=[model_config], description="Document")] = None):
-    logger.info(InfoMessage.POST_REQUEST.format(username=current_user.username, document=doc))
-    mg = RequestManager()
-    res = mg.check_action(dict(doc))
+@app.delete("/del_struct/{form_id}", tags=["form_struct_crud"])
+def delete_crud(form_id,
+                current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
+    condition = {"form_id": form_id}
+    logger.info(InfoMessage.DELETE_REQUEST.format(username=current_user.username, document=form_id))
+    mg = RequestManager(config['FORM_STRUCTURE_DB_COLLECTION_NAME'])
+    res = mg.delete(condition)
     return res.generate_response()
 
 
-@app.post("/form_upload", tags=["form_upload"])
-async def create_upload_file(file: UploadFile, current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+@app.post("/form_upload", tags=["form_struct_crud"])
+async def create_upload_file(file: UploadFile = File(...),
+                             current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
                              ):
     if current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
@@ -91,6 +95,54 @@ async def create_upload_file(file: UploadFile, current_user: Annotated[UserSignI
 
     mg = FormManager()
     res = mg.csv_processor()
+    return res.generate_response()
+
+
+@app.post("/post_form/", tags=["form_crud"], response_model=dict)
+def post(current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+         doc: Annotated[dict | None, Body(examples=[model_config], description="Document")] = None):
+    logger.info(InfoMessage.POST_REQUEST.format(username=current_user.username, document=doc))
+
+    mg = RequestManager(config['FORMS_COLLECTION_NAME'])
+    # res = mg.check_action(dict(doc))
+    res = mg.insert(doc)
+    return res.generate_response()
+
+
+@app.get("/get_form/{form_id}", tags=["form_crud"])
+def get_form(form_id, current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+             ):
+    condition = {'form_id': form_id}
+
+    logger.info(InfoMessage.GET_REQUEST.format(username=current_user.username, form_name=form_id))
+
+    mg = RequestManager(config['FORMS_COLLECTION_NAME'])
+    res = mg.find(condition)
+    return res.generate_response()
+
+
+@app.delete("/del_form/{form_id}", tags=["form_crud"])
+def delete_crud(form_id,
+                current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None):
+    # if current_user.role != "admin":
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
+    condition = {"form_id": form_id}
+    logger.info(InfoMessage.DELETE_REQUEST.format(username=current_user.username, document=form_id))
+    mg = RequestManager(config['FORMS_COLLECTION_NAME'])
+    res = mg.delete(condition)
+    return res.generate_response()
+
+
+@app.put("/update_form/{form_id}", tags=["form_crud"])
+def put_crud(form_id,
+             doc: Annotated[dict | None, Body(examples=[model_config], description="Document")] = None,
+             current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None):
+    # if current_user.role != "one":
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
+
+    logger.info(InfoMessage.PUT_REQUEST.format(username=current_user.username, document=doc))
+    mg = RequestManager(config['FORMS_COLLECTION_NAME'])
+    res = mg.update({"form_id":form_id}, dict(doc))
     return res.generate_response()
 
 

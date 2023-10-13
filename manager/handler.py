@@ -10,10 +10,10 @@ import pandas as pd
 
 
 class RequestManager:
-    def __init__(self):
+    def __init__(self, collection_name):
         self.config = dotenv_values(".env")
         self.logger = logging.getLogger(__name__)
-        self.dao = WasteManagementDao(self.config['FORMS_COLLECTION_NAME'], self.config["DB_NAME"])
+        self.dao = WasteManagementDao(collection_name, self.config["DB_NAME"])
 
     def find(self, condition: dict):
         res = ResponseHandler()
@@ -99,18 +99,18 @@ class RequestManager:
 
         return res
 
-    def check_action(self, req):
-        if req['action'] == "add":
-            res = self.insert(req["payload"])
-        if req['action'] == "update":
-            res = self.update(req["form_id"], req["payload"])
-        if req['action'] == "delete":
-            res = self.delete(req["form_id"])
-        if req['action'] == "get":
-            res = self.find({"form_id": req["form_id"]})
-        else:
-            res = None
-        return res
+    # def check_action(self, req):
+    #     if req['action'] == "add":
+    #         res = self.insert(req["payload"])
+    #     if req['action'] == "update":
+    #         res = self.update(req["form_id"], req["payload"])
+    #     if req['action'] == "delete":
+    #         res = self.delete(req["form_id"])
+    #     if req['action'] == "get":
+    #         res = self.find({"form_id": req["form_id"]})
+    #     else:
+    #         res = None
+    #     return res
 
 
 class SignUp:
@@ -150,29 +150,21 @@ class FormManager:
     def __init__(self):
         self.config = dotenv_values(".env")
         self.logger = logging.getLogger(__name__)
-        self.dao = WasteManagementDao(self.config['FORM_STRUCTURE_DB_COLLECTION_NAME'], self.config["DB_NAME"])
+        self.req = RequestManager(self.config['FORM_STRUCTURE_DB_COLLECTION_NAME'])
 
     def csv_processor(self):
-        result = ResponseHandler()
         file_path = 'new_form.csv'
         data = pd.read_csv(file_path)
         dict_data = data.to_dict('records')
         pattern = dict_data[0]
-        # pattern.update(form_info)
+        res = self.req.insert(pattern)
+        if res.generate_response().status_code == status.HTTP_400_BAD_REQUEST:
+            self.logger.info(InfoMessage.UPDATE_FORM)
+            self.req.delete({"form_id": pattern["form_id"]})
+            self.req.insert(pattern)
+            self.logger.info(InfoMessage.DB_UPDATED)
+            res = ResponseHandler()
+            res.set_response({"message": InfoMessage.DB_UPDATED})
+            res.set_status_code(status.HTTP_200_OK)
 
-        # duplicate_imsi = []
-        # for row in dict_data:
-        #     print(row)
-        #     res = self.dao.insert_one(row)
-        #     if res.status_code == status.HTTP_400_BAD_REQUEST:
-        #         duplicate_imsi.append(row["imsi"])
-        try:
-            res = self.dao.insert_one(pattern)
-        except Exception as error:
-            self.logger.error(ErrorMessage.DB_INSERT)
-            self.logger.error(error)
-            raise Exception
-
-        result.set_response({"message": InfoMessage.DB_INSERT})
-        result.set_status_code(status.HTTP_201_CREATED)
-        return result
+        return res
