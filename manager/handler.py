@@ -99,19 +99,6 @@ class RequestManager:
 
         return res
 
-    # def check_action(self, req):
-    #     if req['action'] == "add":
-    #         res = self.insert(req["payload"])
-    #     if req['action'] == "update":
-    #         res = self.update(req["form_id"], req["payload"])
-    #     if req['action'] == "delete":
-    #         res = self.delete(req["form_id"])
-    #     if req['action'] == "get":
-    #         res = self.find({"form_id": req["form_id"]})
-    #     else:
-    #         res = None
-    #     return res
-
 
 class SignUp:
     def __init__(self):

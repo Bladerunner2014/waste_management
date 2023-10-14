@@ -1,9 +1,39 @@
-from pydantic import BaseModel
+from datetime import datetime
+from pydantic import BaseModel, EmailStr, constr
 
 model_config = {"form_name": "vehicle", "form_id": "None", "action": "add, update, delete, get", "payload": "None"}
 
 
+def userEntity(user) -> dict:
+    return {
+        "id": str(user["_id"]),
+        "name": user["name"],
+        "email": user["email"],
+        "role": user["role"],
+        "photo": user["photo"],
+        "verified": user["verified"],
+        "password": user["password"],
+        "created_at": user["created_at"],
+        "updated_at": user["updated_at"]
+    }
 
+
+class UserBaseSchema(BaseModel):
+    name: str
+    email: str
+    photo: str
+    role: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    class Config:
+        orm_mode = True
+
+
+class CreateUserSchema(UserBaseSchema):
+    password: constr(min_length=8)
+    passwordConfirm: str
+    verified: bool = False
 
 
 class Token(BaseModel):
@@ -43,5 +73,3 @@ class UserInDB(BaseModel):
 class FormInfo(BaseModel):
     form_name: str
     form_group: str
-
-

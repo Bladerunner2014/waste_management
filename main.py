@@ -1,16 +1,22 @@
 from typing import Annotated
 from manager.handler import RequestManager, SignUp, FormManager
-from fastapi import FastAPI, Body, UploadFile, File
+from fastapi import FastAPI, Body, UploadFile, File, Request
 import logging
 from constants.info_message import InfoMessage
 from constants.error_message import ErrorMessage
-from models.models import Token, UserSignIn, model_config, UserSignIn, user_sign_in
+from models.models import Token, UserSignIn, model_config, UserSignIn, user_sign_in, CreateUserSchema, userEntity
 from log import log
 from security.details import *
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from fastapi.middleware.cors import CORSMiddleware
 from security.details import get_user
+from dao.mongodao import WasteManagementDao
+from security import utils
+from random import randbytes
+import hashlib
+from mail.mailservice import send_mail, expire_verification_code
+from threading import Thread
 
 tags_metadata = [
     {
@@ -142,7 +148,7 @@ def put_crud(form_id,
 
     logger.info(InfoMessage.PUT_REQUEST.format(username=current_user.username, document=doc))
     mg = RequestManager(config['FORMS_COLLECTION_NAME'])
-    res = mg.update({"form_id":form_id}, dict(doc))
+    res = mg.update({"form_id": form_id}, dict(doc))
     return res.generate_response()
 
 
@@ -174,6 +180,66 @@ async def sign_up(
     res = mg.sign_up(dict(user_info))
 
     return res.generate_response()
+
+
+@app.post('/register', status_code=status.HTTP_201_CREATED)
+async def create_user(payload: CreateUserSchema, request: Request):
+    # Check if user already exist
+    dao = WasteManagementDao(config["USER_COLLECTION_NAME"], config["DB_NAME"])
+    user = dao.find({'email': payload.email.lower()})
+    if user:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail='Account already exist')
+    # Compare password and passwordConfirm
+    if payload.password != payload.passwordConfirm:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail='Passwords do not match')
+    #  Hash the password
+    payload.password = utils.hash_password(payload.password)
+    del payload.passwordConfirm
+    payload.role = 'admin'
+    payload.verified = False
+    payload.email = payload.email.lower()
+    payload.created_at = datetime.utcnow()
+    payload.updated_at = payload.created_at
+
+    result = dao.insert_one(dict(payload))
+    new_user = dao.find({'email': payload.email.lower()})
+    try:
+        token = randbytes(6)
+        print(token.hex())
+        hashedCode = hashlib.sha256()
+        hashedCode.update(token)
+        verification_code = hashedCode.hexdigest()
+        dao.db.find_one_and_update({'email': payload.email.lower()}, {
+            "$set": {"verification_code": verification_code, "updated_at": datetime.utcnow()}})
+
+        await send_mail("verification_code: {}".format(token.hex()), payload.email.lower())
+    except Exception as error:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail='There was an error sending email')
+    thread = Thread(target=expire_verification_code, args=({'email': payload.email.lower()}, {
+        "$set": {"verification_code": None, "updated_at": datetime.utcnow()}}))
+    thread.start()
+    return {'status': 'success', 'message': 'Verification token successfully sent to your email'}
+
+
+@app.get('/verifyemail/{token}')
+def verify_me(token):
+    hashedCode = hashlib.sha256()
+    hashedCode.update(bytes.fromhex(token))
+    verification_code = hashedCode.hexdigest()
+    dao = WasteManagementDao(config["USER_COLLECTION_NAME"], config["DB_NAME"])
+    result = dao.db.find_one_and_update({"verification_code": verification_code}, {
+        "$set": {"verification_code": None, "verified": True, "updated_at": datetime.utcnow()}}, new=True)
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail='Invalid verification code or account already verified')
+    return {
+        "status": "success",
+        "message": "Account verified successfully"
+    }
 
 
 log.setup_logger()
