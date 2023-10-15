@@ -7,7 +7,7 @@ from http_handler.response_handler import ResponseHandler
 from fastapi import status
 from security.details import get_password_hash
 import pandas as pd
-
+from db.create_table import CreateTable
 
 class RequestManager:
     def __init__(self, collection_name):
@@ -140,6 +140,7 @@ class FormManager:
         self.req = RequestManager(self.config['FORM_STRUCTURE_DB_COLLECTION_NAME'])
 
     def csv_processor(self):
+        tb = CreateTable()
         file_path = 'new_form.csv'
         data = pd.read_csv(file_path)
         dict_data = data.to_dict('records')
@@ -153,5 +154,7 @@ class FormManager:
             res = ResponseHandler()
             res.set_response({"message": InfoMessage.DB_UPDATED})
             res.set_status_code(status.HTTP_200_OK)
+        tb.open_csv()
+        tb.create_table()
 
         return res
