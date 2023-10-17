@@ -1,10 +1,10 @@
 from typing import Annotated
-from manager.handler import RequestManager, SignUp, FormManager
+from manager.handler import RequestManager, FormManager
 from fastapi import FastAPI, Body, UploadFile, File, Request
 import logging
 from constants.info_message import InfoMessage
 from constants.error_message import ErrorMessage
-from models.models import Token, UserSignIn, model_config, UserSignIn, user_sign_in, CreateUserSchema, userEntity
+from models.models import Token, UserSignIn, model_config, UserSignIn, user_sign_in
 from log import log
 from security.details import *
 from fastapi.security import OAuth2PasswordRequestForm
@@ -17,6 +17,7 @@ from random import randbytes
 import hashlib
 from mail.mailservice import send_mail, expire_verification_code
 from threading import Thread
+from security.details import get_password_hash
 
 tags_metadata = [
     {
@@ -157,6 +158,7 @@ async def login_for_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
     user = authenticate_user(username=form_data.username, password=form_data.password)
+    print(user)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -171,19 +173,8 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.post("/sign_up", tags=["auth"])
-async def sign_up(
-        user_info: Annotated[UserSignIn | None, Body(examples=[user_sign_in], description="Sign up")] = None):
-    logger.info(user_info)
-
-    mg = SignUp()
-    res = mg.sign_up(dict(user_info))
-
-    return res.generate_response()
-
-
-@app.post('/register', status_code=status.HTTP_201_CREATED)
-async def create_user(payload: CreateUserSchema, request: Request):
+@app.post('/register', status_code=status.HTTP_201_CREATED, tags=["auth"])
+async def create_user(payload: UserSignIn, request: Request):
     # Check if user already exist
     dao = WasteManagementDao(config["USER_COLLECTION_NAME"], config["DB_NAME"])
     user = dao.find({'email': payload.email.lower()})
@@ -195,8 +186,8 @@ async def create_user(payload: CreateUserSchema, request: Request):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail='Passwords do not match')
     #  Hash the password
-    payload.password = utils.hash_password(payload.password)
-    del payload.passwordConfirm
+    payload.password = get_password_hash(payload.password)
+    # del payload.passwordConfirm
     payload.role = 'admin'
     payload.verified = False
     payload.email = payload.email.lower()
@@ -224,7 +215,7 @@ async def create_user(payload: CreateUserSchema, request: Request):
     return {'status': 'success', 'message': 'Verification token successfully sent to your email'}
 
 
-@app.get('/verifyemail/{token}')
+@app.get('/verifyemail/{token}', tags=["auth"])
 def verify_me(token):
     hashedCode = hashlib.sha256()
     hashedCode.update(bytes.fromhex(token))

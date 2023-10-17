@@ -54,8 +54,10 @@ def get_user(username: str):
     database = client[config["DB_NAME"]]
     collection = database[config["USER_COLLECTION_NAME"]]
     cursor = collection.find_one({'username': username})
+
     if not cursor:
         return False
+    print(cursor)
     return UserInDB(**cursor)
 
 
@@ -89,8 +91,9 @@ def get_password_hash(password):
 
 def authenticate_user(username: str, password: str):
     user = get_user(username)
+    print(user)
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    if not verify_password(password, user.password):
         return False
     return user

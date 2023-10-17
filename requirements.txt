@@ -8,3 +8,5 @@ python-jose~=3.3.0
 python-multipart~=0.0.6
 bcrypt~=4.0.1
 pandas~=2.1.1
+SQLAlchemy~=2.0.22
+psycopg2-binary~=2.9.9
