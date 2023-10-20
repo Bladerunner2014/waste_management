@@ -52,11 +52,11 @@ logger = logging.getLogger(__name__)
 
 
 @app.get("/get_struct/{form_id}", tags=["form_struct_crud"])
-def get_form_structure(form_id, current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+def get_form_structure(form_id
                        ):
     condition = {'form_id': form_id}
 
-    logger.info(InfoMessage.GET_REQUEST.format(username=current_user.username, form_name=form_id))
+    # logger.info(InfoMessage.GET_REQUEST.format(username=current_user.username, form_name=form_id))
 
     mg = RequestManager(config['FORM_STRUCTURE_DB_COLLECTION_NAME'])
     res = mg.find(condition)
@@ -64,12 +64,11 @@ def get_form_structure(form_id, current_user: Annotated[UserSignIn, Depends(get_
 
 
 @app.delete("/del_struct/{form_id}", tags=["form_struct_crud"])
-def delete_crud(form_id,
-                current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
+def delete_crud(form_id):
+    # if current_user.role != "admin":
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
     condition = {"form_id": form_id}
-    logger.info(InfoMessage.DELETE_REQUEST.format(username=current_user.username, document=form_id))
+    # logger.info(InfoMessage.DELETE_REQUEST.format(username=current_user.username, document=form_id))
     mg = RequestManager(config['FORM_STRUCTURE_DB_COLLECTION_NAME'])
     res = mg.delete(condition)
     return res.generate_response()
@@ -77,10 +76,10 @@ def delete_crud(form_id,
 
 @app.post("/form_upload", tags=["form_struct_crud"])
 async def create_upload_file(file: UploadFile = File(...),
-                             current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+
                              ):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
+    # if current_user.role != "admin":
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
 
     # Get the file size (in bytes)
     file.file.seek(0, 2)
@@ -106,9 +105,9 @@ async def create_upload_file(file: UploadFile = File(...),
 
 
 @app.post("/post_form/", tags=["form_crud"], response_model=dict)
-def post(current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+def post(
          doc: Annotated[dict | None, Body(examples=[model_config], description="Document")] = None):
-    logger.info(InfoMessage.POST_REQUEST.format(username=current_user.username, document=doc))
+    # logger.info(InfoMessage.POST_REQUEST.format(username=current_user.username, document=doc))
 
     mg = RequestManager(config['FORMS_COLLECTION_NAME'])
     # res = mg.check_action(dict(doc))
@@ -117,11 +116,11 @@ def post(current_user: Annotated[UserSignIn, Depends(get_current_active_user)] =
 
 
 @app.get("/get_form/{form_id}", tags=["form_crud"])
-def get_form(form_id, current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None,
+def get_form(form_id
              ):
     condition = {'form_id': form_id}
 
-    logger.info(InfoMessage.GET_REQUEST.format(username=current_user.username, form_name=form_id))
+    # logger.info(InfoMessage.GET_REQUEST.format(username=current_user.username, form_name=form_id))
 
     mg = RequestManager(config['FORMS_COLLECTION_NAME'])
     res = mg.find(condition)
@@ -130,11 +129,11 @@ def get_form(form_id, current_user: Annotated[UserSignIn, Depends(get_current_ac
 
 @app.delete("/del_form/{form_id}", tags=["form_crud"])
 def delete_crud(form_id,
-                current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None):
+                ):
     # if current_user.role != "admin":
     #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
     condition = {"form_id": form_id}
-    logger.info(InfoMessage.DELETE_REQUEST.format(username=current_user.username, document=form_id))
+    # logger.info(InfoMessage.DELETE_REQUEST.format(username=current_user.username, document=form_id))
     mg = RequestManager(config['FORMS_COLLECTION_NAME'])
     res = mg.delete(condition)
     return res.generate_response()
@@ -143,11 +142,11 @@ def delete_crud(form_id,
 @app.put("/update_form/{form_id}", tags=["form_crud"])
 def put_crud(form_id,
              doc: Annotated[dict | None, Body(examples=[model_config], description="Document")] = None,
-             current_user: Annotated[UserSignIn, Depends(get_current_active_user)] = None):
+             ):
     # if current_user.role != "one":
     #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ErrorMessage.ROLE)
 
-    logger.info(InfoMessage.PUT_REQUEST.format(username=current_user.username, document=doc))
+    # logger.info(InfoMessage.PUT_REQUEST.format(username=current_user.username, document=doc))
     mg = RequestManager(config['FORMS_COLLECTION_NAME'])
     res = mg.update({"form_id": form_id}, dict(doc))
     return res.generate_response()

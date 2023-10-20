@@ -9,6 +9,7 @@ from security.details import get_password_hash
 import pandas as pd
 from db.create_table import CreateTable
 
+
 class RequestManager:
     def __init__(self, collection_name):
         self.config = dotenv_values(".env")
@@ -19,12 +20,13 @@ class RequestManager:
         res = ResponseHandler()
         try:
             result = self.dao.find(condition)
-            self.logger.info(InfoMessage.DB_FIND)
         except Exception as error:
             self.logger.error(ErrorMessage.DB_SELECT)
             self.logger.error(error)
             raise Exception
         if result:
+        # print(condition)
+            self.logger.info(InfoMessage.DB_FIND)
             res.set_response(result)
             res.set_status_code(status.HTTP_200_OK)
             return res
@@ -101,36 +103,36 @@ class RequestManager:
 
 
 # class SignUp:
-    # def __init__(self):
-    #     self.config = dotenv_values(".env")
-    #     self.logger = logging.getLogger(__name__)
-    #     self.dao = WasteManagementDao(collection_name="users", database="Waste")
-    #
-    # def sign_up(self, user_info):
-    #     result = ResponseHandler()
-    #     email = {"email": user_info['email']}
-    #     username = {"username": user_info['username']}
-    #     email_res = self.dao.find(email)
-    #     username_res = self.dao.find(username)
-    #     if email_res or username_res:
-    #         result.set_response({"message": ErrorMessage.ALREADY_EXISTS})
-    #         result.set_status_code(status.HTTP_400_BAD_REQUEST)
-    #         return result
-    #
-    #     user_info["hashed_password"] = get_password_hash(user_info["password"])
-    #     user_info.pop("password")
-    #     try:
-    #         self.dao.insert_one(user_info)
-    #         self.logger.info(InfoMessage.DB_INSERT)
-    #     except Exception as error:
-    #         self.logger.error(ErrorMessage.DB_INSERT)
-    #         self.logger.error(error)
-    #         raise Exception
-    #
-    #     result.set_response({"message": InfoMessage.DB_INSERT})
-    #     result.set_status_code(status.HTTP_201_CREATED)
-    #
-    #     return result
+# def __init__(self):
+#     self.config = dotenv_values(".env")
+#     self.logger = logging.getLogger(__name__)
+#     self.dao = WasteManagementDao(collection_name="users", database="Waste")
+#
+# def sign_up(self, user_info):
+#     result = ResponseHandler()
+#     email = {"email": user_info['email']}
+#     username = {"username": user_info['username']}
+#     email_res = self.dao.find(email)
+#     username_res = self.dao.find(username)
+#     if email_res or username_res:
+#         result.set_response({"message": ErrorMessage.ALREADY_EXISTS})
+#         result.set_status_code(status.HTTP_400_BAD_REQUEST)
+#         return result
+#
+#     user_info["hashed_password"] = get_password_hash(user_info["password"])
+#     user_info.pop("password")
+#     try:
+#         self.dao.insert_one(user_info)
+#         self.logger.info(InfoMessage.DB_INSERT)
+#     except Exception as error:
+#         self.logger.error(ErrorMessage.DB_INSERT)
+#         self.logger.error(error)
+#         raise Exception
+#
+#     result.set_response({"message": InfoMessage.DB_INSERT})
+#     result.set_status_code(status.HTTP_201_CREATED)
+#
+#     return result
 
 
 class FormManager:
