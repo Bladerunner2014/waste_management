@@ -12,7 +12,7 @@ from datetime import timedelta
 from fastapi.middleware.cors import CORSMiddleware
 from security.details import get_user
 from dao.mongodao import WasteManagementDao
-from security import utils
+# from security import utils
 from random import randbytes
 import hashlib
 from mail.mailservice import send_mail, expire_verification_code
