@@ -27,13 +27,40 @@ This command will build container image and run it on 8008 port. you can change 
 version: '3'
 
 services:
-  web:
+  waste_management:
     build: .
     command: uvicorn main:app --host 0.0.0.0
     volumes:
-      - .:/infra
+      - .:/waste_management
     ports:
       - "8008:8000"
+    depends_on:
+      - mongodb
+      - postgres
+
+  mongodb:
+    image: mongo
+#    ports:
+#      - "27017"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data/db
+
+  postgres:
+    image: postgres
+#    ports:
+#      - "5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: '1234'
+      POSTGRES_DB: wm
+
+volumes:
+  db:
 ```
 
 
