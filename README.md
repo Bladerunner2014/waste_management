@@ -7,13 +7,6 @@
 ![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
 
 
-# Costum MongoDB WebUI with authentication by bladerunner
-A UI powered by **FastAPI**. You can manage MongoDB database via CRUD endpoints.
-
-## Endpoints
-1. MongoDB CRUD 🏠
-2. Authentication 💻
-
 ## How does it works?
 ## Run with docker:
 Run the following command in the project root:
