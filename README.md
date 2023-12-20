@@ -1,89 +1,71 @@
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 ![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
 ![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
 ![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
-
+![MinIO Badge](https://img.shields.io/badge/MinIO-C72E49?logo=minio&logoColor=fff&style=flat-square)
 
 ## How does it works?
 ## Run with docker:
 Run the following command in the project root:
 ```bash
 # clone the project
-git clone https://github.com/Bladerunner2014/waste_management.git
+git clone https://github.com/mohammad-mahdi-rajabi/waste-management.git
 
 # or usin ssh
-git clone git@github.com:Bladerunner2014/waste_management.git
+git clone git@github.com:mohammad-mahdi-rajabi/waste-management.git
 
-cd waste_management
+cd waste-management
 
 # run project with docker and docker-compose
 docker-compose up -d
 ```
-This command will build container image and run it on 8008 port. you can change the listening port in docker-compose file by changing the 8008 in ports section:
+This command will build container image and run it on 80000 port. you can change the listening port in docker-compose file by changing the 8008 in ports section:
 ```bash
 version: '3'
 
 services:
-  waste_management:
+
+  wst-mng:
     build: .
-    command: uvicorn main:app --host 0.0.0.0
-    volumes:
-      - .:/waste_management
-    ports:
-      - "8008:8000"
+#    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000
+    expose:
+      - "8000"
     depends_on:
-      - mongodb
-      - postgres
-
-  mongodb:
-    image: mongo
-#    ports:
-#      - "27017"
-    volumes:
-      - type: bind
-        source: ./data
-        target: /data/db
-
+          - postgres
   postgres:
     image: postgres
-#    ports:
-#      - "5432"
+    ports:
+      - "5432"
     volumes:
       - db:/var/lib/postgresql/data
 
     environment:
       POSTGRES_USER: 'postgres'
       POSTGRES_PASSWORD: '1234'
-      POSTGRES_DB: wm
-
+      POSTGRES_DB: form
+#  nginx:
+#    build: ./nginx
+#    restart: always
+#    ports:
+#      - "1337:80"
+#    depends_on:
+#        - wst-mng
 volumes:
   db:
 ```
 
 
 ## Run bare metal on your machine:
-Run the following command in the project root:
-```bash
-uvicorn main:app --reload
-```
-**Note:**
-Dont use --reload in production!
-
 
 ## API documents are available in swagger:
 After running the app, open the following address in your browser:
 ```bash
-http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/api/schema/docs/
 ```
 **Note:**
-Change the host and port with your costum host and port. You should see the following page containing the API documents:
-<p align="center">
-<img src='./swagger.png' style="border: white;border-radius: 2pc;" alt='trojan horse'/>
-</p>
-
 
 # License
 [![Licence](https://img.shields.io/github/license/Ileriayo/markdown-badges?style=for-the-badge)](./LICENSE)
